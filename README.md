@@ -1,7 +1,5 @@
 BigInt
 ==========
-Intro
------
 A big integer library for c. It's just a practice code.
 
 USEAGE
