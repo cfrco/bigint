@@ -281,6 +281,45 @@ void bigint_sub(bigint_t *a,bigint_t *b,bigint_t *c)
     else b->flag |= 0x01;
 }
 
+void bigint_mult(bigint_t *a,bigint_t *b,bigint_t *c)
+{
+    size_t i,j,e = a->len+b->len;
+    int t;
+
+    for(i=0;i<e;++i)
+        c->digits[i] = 0;
+
+    if(BIGINT_SIGN(*a) == BIGINT_SIGN(*b))
+        c->flag |= 0x01;
+    else 
+        c->flag &= ~(0x01);
+
+    for(i=0;i<a->len;++i)
+    {
+        for(j=0;j<b->len;++j)
+        {
+            if(i+j>=c->maxlen)break;
+            c->digits[i+j] += a->digits[i]*b->digits[j];   
+            e = i+j;
+            while(c->digits[e]>9999)
+            {
+                c->digits[e+1] += c->digits[e]/10000; 
+                c->digits[e++] %= 10000;
+            }
+        }
+        if(i+j>=c->maxlen)break;
+    }
+
+    if(i+j>=c->maxlen)
+        c->flag |= 0x02;
+    
+    for(i=a->len+b->len-1;i>0;--i)
+        if(c->digits[i]!=0)
+            break;
+
+    c->len = i+1;
+}
+
 void printbig(bigint_t *bt)
 {
     size_t i = bt->len-1;

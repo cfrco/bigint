@@ -9,7 +9,6 @@ Example can be finded in test.
 
 ToDO
 -----
-* Multiplication
 * Division
 * Mod
 
