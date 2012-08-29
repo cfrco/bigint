@@ -30,6 +30,7 @@ typedef struct bigint_t
 void bigint_new(bigint_t *bt,void *ptr,size_t size);
 void bigint_zero(bigint_t *bt);
 void bigint_free(bigint_t *bt);
+void bigint_cpy(bigint_t *dst,bigint_t *src);
 void i2big(bigint_t *bt,int n);
 void a2big(bigint_t *bt,const char *str);
 
@@ -39,6 +40,9 @@ int bigint_us_cmp(bigint_t *a,bigint_t *b);
 
 void bigint_add(bigint_t *a,bigint_t *b,bigint_t *c);
 void bigint_sub(bigint_t *a,bigint_t *b,bigint_t *c);
+void bigint_mult(bigint_t *a,bigint_t *b,bigint_t *c);
+void bigint_div(bigint_t *a,bigint_t *b,bigint_t *c);
+void bigint_mod(bigint_t *a,bigint_t *b,bigint_t *c);
 void printbig(bigint_t *bt);
 
 #endif
