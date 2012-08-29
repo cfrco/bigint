@@ -9,8 +9,7 @@ Example can be finded in test.
 
 ToDO
 -----
-* Division
-* Mod
+* More test for all operation.
 
 COPYRIGHT
 ---------

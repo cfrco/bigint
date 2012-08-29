@@ -337,25 +337,24 @@ void bigint_mult(bigint_t *a,bigint_t *b,bigint_t *c)
 
 void bigint_digitmv(bigint_t *bt,int offset)
 {
-    if(offset>0 && bt->len+offset < bt->maxlen)
+    size_t i; 
+    for(i=bt->len-1;i>=0;--i)
     {
-        size_t i; 
-        for(i=b->len-1;i>=0;--i)
-        {
-            bt->digits[i+offset] = bt->digits[i]; 
-            if(i==0)break;
-        }
-
-        for(i=0;i<offset;++i)
-            bt->digits[i] = 0;
+        bt->digits[i+offset] = bt->digits[i]; 
+        if(i==0)break;
     }
 
+    for(i=0;i<offset;++i)
+        bt->digits[i] = 0;
     bt->len = bt->len+offset;
 }
 
 void _bigint_div10(bigint_t *bt)
 {
     size_t i;
+
+    if(bt->len==1&&bt->digits[0]==0)
+        return ;
 
     bt->digits[0] /= 10;
     for(i=1;i<bt->len;++i)
@@ -364,8 +363,119 @@ void _bigint_div10(bigint_t *bt)
         bt->digits[i] /= 10;
     }
 
+    if(bt->len==1&&bt->digits[0]==0)
+        return ;
     if(bt->digits[bt->len-1] == 0)
         bt->len--;
+}
+
+void bigint_div(bigint_t *a,bigint_t *b,bigint_t *c)
+{
+    bigint_t ta,tb;
+    if(a->len > c->maxlen)
+    {
+        c->flag |= 0x02; 
+        return ;
+    }
+    if(bigint_us_cmp(a,b)<0)
+    {
+        bigint_zero(c);
+        return ;
+    }
+
+    size_t i;
+    for(i=0;i<a->len;++i)
+        c->digits[i] = 0;
+
+    bigint_new(&ta,NULL,a->len);
+    bigint_new(&tb,NULL,a->len+1);
+
+    bigint_cpy(&ta,a);
+    bigint_cpy(&tb,b);
+    
+    int offset = (int)(a->len-b->len+1);
+    bigint_digitmv(&tb,offset);
+    offset *= 4;
+    
+    while(bigint_us_cmp(&ta,&tb)<0)
+    {
+        _bigint_div10(&tb); 
+        --offset;
+    }
+    
+    while((tb.len!=1||tb.digits[0]!=0)&&offset>=0)
+    {
+        do
+        {
+            _bigint_sub(&ta,&tb,&ta);
+            
+            switch(offset&0x03)
+            {
+                case 0: c->digits[offset/4] += 1;break;
+                case 1: c->digits[offset/4] += 10;break;
+                case 2: c->digits[offset/4] += 100;break;
+                case 3: c->digits[offset/4] += 1000;break;
+            }
+        }while(bigint_us_cmp(&ta,&tb)>=0);
+
+        while(bigint_us_cmp(&ta,&tb)<0&&offset>=0)
+        {
+            _bigint_div10(&tb);
+            --offset;
+        }
+    }
+
+    for(i=a->len-1;i>0;--i)
+        if(c->digits[i]!=0)break;
+    c->len = i+1;
+
+    bigint_free(&ta);
+    bigint_free(&tb);
+}
+
+void bigint_mod(bigint_t *a,bigint_t *b,bigint_t *c)
+{
+    bigint_t tb;
+
+    if(a->len > c->maxlen)
+    {
+        c->flag |= 0x02; 
+        return ;
+    }
+
+    bigint_cpy(c,a);
+    if(bigint_us_cmp(a,b)<0)
+        return ;
+
+
+    bigint_new(&tb,NULL,a->len+1);
+    bigint_cpy(&tb,b);
+    
+    int offset = (int)(a->len-b->len+1);
+    bigint_digitmv(&tb,offset);
+    offset *= 4;
+    
+    while(bigint_us_cmp(c,&tb)<0)
+    {
+        _bigint_div10(&tb); 
+        --offset;
+    }
+    
+    while((tb.len!=1||tb.digits[0]!=0)&&offset>=0)
+    {
+        do
+        {
+            _bigint_sub(c,&tb,c);
+        }while(bigint_us_cmp(c,&tb)>=0);
+
+        while(bigint_us_cmp(c,&tb)<0&&offset>=0)
+        {
+            _bigint_div10(&tb);
+            --offset;
+        }
+    }
+
+    bigint_free(&tb);
 }
 
 void printbig(bigint_t *bt)
