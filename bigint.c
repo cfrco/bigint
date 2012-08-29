@@ -37,6 +37,20 @@ void bigint_free(bigint_t *bt)
     bt->len = 0;
 }
 
+void bigint_cpy(bigint_t *dst,bigint_t *src)
+{
+    if(dst->maxlen < src->len)
+        return ;
+
+    dst->len = src->len;
+    dst->flag &= ~(0x03);
+    dst->flag |= (src->flag)&(0x03);
+
+    size_t i,e=dst->len;
+    for(i=0;i<e;++i)
+        dst->digits[i] = src->digits[i];
+}
+
 void i2big(bigint_t *bt,int n)
 {
     if(n>=0) bt->flag |= 0x01;
@@ -58,6 +72,7 @@ void i2big(bigint_t *bt,int n)
     else bt->flag &= ~(0x02);
     bt->len = i+1;
 }
+
 void a2big(bigint_t *bt,const char *str)
 {
     size_t len = strlen(str),end=0;
@@ -318,6 +333,39 @@ void bigint_mult(bigint_t *a,bigint_t *b,bigint_t *c)
             break;
 
     c->len = i+1;
+}
+
+void bigint_digitmv(bigint_t *bt,int offset)
+{
+    if(offset>0 && bt->len+offset < bt->maxlen)
+    {
+        size_t i; 
+        for(i=b->len-1;i>=0;--i)
+        {
+            bt->digits[i+offset] = bt->digits[i]; 
+            if(i==0)break;
+        }
+
+        for(i=0;i<offset;++i)
+            bt->digits[i] = 0;
+    }
+
+    bt->len = bt->len+offset;
+}
+
+void _bigint_div10(bigint_t *bt)
+{
+    size_t i;
+
+    bt->digits[0] /= 10;
+    for(i=1;i<bt->len;++i)
+    {
+        bt->digits[i-1] += (bt->digits[i]%10)*1000;
+        bt->digits[i] /= 10;
+    }
+
+    if(bt->digits[bt->len-1] == 0)
+        bt->len--;
 }
 
 void printbig(bigint_t *bt)
